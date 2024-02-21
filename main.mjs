@@ -6,9 +6,13 @@ const app = express()
 app.get("/", async (req, res) => {
   let post = new Post({title: "coucou !", content: "Nice content" });
   console.log('post', post)
-  post.save()
+  // post.save()
+  // post.delete()
   let posts = await Post.all();
-  console.log('FIND', await Post.find(8))
+  const postTwo = await Post.find(36)
+  console.log(postTwo)
+  postTwo.update({title: 'lol'})
+  // postTwo.delete()
   console.log('tous les posts :\n', posts);
   res.json({ posts })
 });

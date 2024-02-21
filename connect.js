@@ -12,15 +12,32 @@ let db = new DB.Database(
 );
 console.log("Connected to the in-memory SQlite database.");
 
-export async function accessData(query) {
-  return new Promise(function (resolve, reject) {
-    db.all(query, function (err, rows) {
-      if (err) {
-        return reject(err);
-      }
-      resolve(rows);
+export async function sendQuery(query) {
+  try {
+    return new Promise(function (resolve, reject) {
+      db.all(query, function (err, rows) {
+        if (err) {
+          return reject(err);
+        }
+        resolve(rows);
+      });
     });
-  });
+  } catch (error) {
+    return error;
+  }
+}
+
+export function updateData(tableName, columns, id, values) {
+  db.run(
+    `UPDATE ${tableName}s SET ${columns} WHERE id = ?`,
+    [values, id],
+    function (err) {
+      if (err) {
+        return console.error(err.message);
+      }
+      console.log(`Nombre de lignes modifiées: ${this.changes}`);
+    }
+  );
 }
 
 // To Insert Data
@@ -29,7 +46,7 @@ export function insertData(tableName, attributes) {
     const keys = Object.keys(attributes);
     const columns = keys.join();
     const questionsMark = keys.map((i) => "?").join();
-    const values = Object.values(attributes)
+    const values = Object.values(attributes);
     var insertQuery = db.prepare(
       `INSERT INTO ${tableName} (${columns}) VALUES (${questionsMark});`
     );
@@ -49,11 +66,13 @@ export function insertPosts() {
     ["titre3", "mon contenu 3"],
   ];
   try {
-    var insertQuery = db.prepare("INSERT INTO posts (title, content) VALUES (?,?)");
-    posts.forEach(post => {
-      insertQuery.run(post)
+    var insertQuery = db.prepare(
+      "INSERT INTO posts (title, content) VALUES (?,?)"
+    );
+    posts.forEach((post) => {
+      insertQuery.run(post);
       console.log("Data inserted successfully :", post);
-    })
+    });
     insertQuery.finalize();
   } catch (e) {
     console.log("erreur dans l'INSERT", e);
@@ -63,12 +82,12 @@ export function insertPosts() {
 // We poeple DB
 db.serialize(async function () {
   db.run(
-    "CREATE TABLE IF NOT EXISTS posts (post_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL );"
+    "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL );"
   );
-  let posts = await accessData("SELECT * FROM posts")
-  console.log("POSTS in serializer! ", posts)
+  let posts = await sendQuery("SELECT * FROM posts");
+  console.log("POSTS in serializer! ", posts);
   if (posts.length === 0) {
-    insertPosts()
+    insertPosts();
   }
 });
 

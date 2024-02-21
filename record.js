@@ -1,4 +1,4 @@
-import { accessData, insertData } from "./connect.js";
+import { sendQuery, insertData, updateData } from "./connect.js";
 
 export default class Record {
   constructor(attributes) {
@@ -11,7 +11,7 @@ export default class Record {
   static async all() {
     const table = `${this.name.toLocaleLowerCase()}s`;
     const obj_constructor = this;
-    const data = await accessData(`SELECT * FROM ${table}`);
+    const data = await sendQuery(`SELECT * FROM ${table}`);
     const records = data.map((obj) => {
       const object = new obj_constructor(obj);
       return object;
@@ -19,11 +19,12 @@ export default class Record {
     return Promise.all(records);
   }
 
-  static async find(id) {
+  static async find(recordID) {
+    if (!recordID) return console.error("This instance doesn't exit in DB !");
     const table = `${this.name.toLocaleLowerCase()}s`;
     const obj_constructor = this;
-    const item = await accessData(
-      `SELECT * FROM ${table} WHERE ${this.name.toLocaleLowerCase()}_id = ${id}`
+    const item = await sendQuery(
+      `SELECT * FROM ${table} WHERE id = ${recordID}`
     );
     if (item?.length === 0) return null;
     const object = new obj_constructor(item?.at(0));
@@ -31,7 +32,7 @@ export default class Record {
   }
 
   async save() {
-    const existingObj = this?.id;
+    const existingObj = this[`${this.tableName()}s_id`];
     existingObj ? this.update(this) : this.create(this);
   }
 
@@ -46,23 +47,26 @@ export default class Record {
   }
 
   async update(attributes) {
-    let recordInDB = await this.constructor.find(this?.id);
+    const id = this.id;
+    if (!id || !this) return console.error("You can't update an non-persisting Instance !")
+    let recordInDB = await this.constructor.find(id);
     const objectKeysAndValues = Object.entries(attributes);
     // Ne mettre à jour seulement que les données changées !
     const diffKeysValues = objectKeysAndValues.filter(
       ([key, value]) => recordInDB[key] !== value
     );
-    const query = diffKeysValues
-      .map(([key, value]) => `${key} = '${value}'`)
+    const valuesWithoutId = Object.entries(attributes)
+      .filter(([k, v]) => k !== 'id')
+      .map(([k, v]) => v)
       .join();
-    if (query.length > 0) {
+    const columnsEntries = diffKeysValues
+      .map(([key, value]) => `${key} = ?`)
+      .join();
+    if (diffKeysValues.length > 0) {
       // MAJ de l'objet en DB
-      await accessData(
-        `UPDATE ${this.tableName()}s SET ${query} WHERE ${this.tableName()}_id = ${
-          attributes.id
-        }`
-      );
-      recordInDB = await this.constructor.find(this?.id);
+
+      updateData(this.tableName(), columnsEntries, id, valuesWithoutId);
+      recordInDB = await this.constructor.find(id);
     } else {
       console.log("Aucun changement !");
     }
@@ -70,13 +74,13 @@ export default class Record {
   }
 
   async delete() {
-    const record = await this.constructor.find(this.id);
+    const id = this?.id;
+    if (!id) return console.error("You can't delete an non-persisting Instance !");
+    const record = await this.constructor.find(id);
     console.log(record);
     if (record) {
-      await accessData(
-        `DELETE FROM ${this.tableName()}s WHERE ${this.tableName()}_id = ${
-          this.id
-        };`
+      await sendQuery(
+        `DELETE FROM ${this.tableName()}s WHERE id = ${id};`
       );
       return true;
     } else {

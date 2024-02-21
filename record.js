@@ -1,6 +1,6 @@
 import { sendQuery, insertData, updateData } from "./connect.js";
 
-export default class Record {
+class Record {
   constructor(attributes) {
     const keys = Object.entries(attributes);
     keys.forEach(([key, value]) => {
@@ -19,6 +19,14 @@ export default class Record {
     return Promise.all(records);
   }
 
+  static async last() {
+    const table = `${this.name.toLocaleLowerCase()}s`;
+    const data = await sendQuery(`SELECT * FROM ${table}`);
+    const last = new this(data.at(-1))
+
+    return Promise.resolve(last);
+  }
+
   static async find(recordID) {
     if (!recordID) return console.error("This instance doesn't exit in DB !");
     const table = `${this.name.toLocaleLowerCase()}s`;
@@ -33,16 +41,16 @@ export default class Record {
 
   async save() {
     const existingObj = this[`${this.tableName()}s_id`];
-    existingObj ? this.update(this) : this.create(this);
+    existingObj ? this.update(this) : this.construtor.create(this);
   }
 
-  async create(attributes) {
+  static async create(attributes) {
     const keysAndValues = Object.entries(attributes);
     const filtered = keysAndValues.filter(([key, value]) => key !== "id");
     const objectWithoutId = Object.fromEntries(filtered);
 
-    insertData(`${this.tableName()}s`, objectWithoutId);
-    const object = new this.constructor(this);
+    insertData(`${this.name.toLocaleLowerCase()}s`, objectWithoutId);
+    const object = new this(attributes);
     return object;
   }
 
@@ -92,3 +100,5 @@ export default class Record {
     return `${this.constructor.name.toLocaleLowerCase()}`;
   }
 }
+
+export default Record;

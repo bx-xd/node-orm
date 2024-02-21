@@ -35,15 +35,14 @@ async function db_all(query) {
 }
 
 // To Insert Data
-export function insertData(attributes) {
+export function insertData(tableName, attributes) {
   try {
-    console.log("atr", attributes);
     const keys = Object.keys(attributes);
     const columns = keys.join();
     const questionsMark = keys.map((i) => "?").join();
     const values = Object.values(attributes)
     var insertQuery = db.prepare(
-      `INSERT INTO posts (${columns}) VALUES (${questionsMark})`
+      `INSERT INTO ${tableName} (${columns}) VALUES (${questionsMark})`
     );
     insertQuery.run(values);
 
@@ -53,32 +52,35 @@ export function insertData(attributes) {
   }
 }
 
-// Working
+// SEEDS
 export function insertPosts() {
   const posts = [
     ["titre1", "mon contenu 1"],
     ["titre2", "mon contenu 2"],
+    ["titre3", "mon contenu 3"],
   ];
   try {
-    var insertQuery = db.prepare("INSERT INTO posts VALUES (?,?,?)");
-    for (var i = 0; i < posts.length; i++) {
-      insertQuery.run([posts[i][0], posts[i][1]]);
-      console.log("Data inserted successfully...");
-    }
+    var insertQuery = db.prepare("INSERT INTO posts (title, content) VALUES (?,?)");
+    posts.forEach(post => {
+      insertQuery.run(post)
+      console.log("Data inserted successfully :", post);
+    })
     insertQuery.finalize();
   } catch (e) {
     console.log("erreur dans l'INSERT", e);
   }
 }
 
-// On peuple la DB
-db.serialize(function () {
-  // These two queries will run sequentially.
+// We poeple DB
+db.serialize(async function () {
   db.run(
     "CREATE TABLE IF NOT EXISTS posts (post_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL );"
   );
-  // insertPosts()
-  // accessData('posts')
+  let posts = await accessData("SELECT * FROM posts")
+  console.log("POSTS in serializer! ", posts)
+  if (posts.length === 0) {
+    insertPosts()
+  }
 });
 
 export default db;

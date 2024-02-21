@@ -2,11 +2,10 @@ import { accessData, insertData } from "./connect.js";
 
 export default class Record {
   constructor(attributes) {
-    const keys = Object.entries(attributes)
+    const keys = Object.entries(attributes);
     keys.forEach(([key, value]) => {
-      this[key] = value
-    })
-    // this.init(attributes);
+      this[key] = value;
+    });
   }
 
   static async all() {
@@ -15,9 +14,7 @@ export default class Record {
     const data = await accessData(`SELECT * FROM ${table}`);
     const records = data.map((obj) => {
       const object = new obj_constructor(obj);
-      return object
-      // const obj_initaliazed = object.init(obj);
-      // return obj_initaliazed;
+      return object;
     });
     return Promise.all(records);
   }
@@ -25,78 +22,69 @@ export default class Record {
   static async find(id) {
     const table = `${this.name.toLocaleLowerCase()}s`;
     const obj_constructor = this;
-    const item = await accessData(`SELECT * FROM ${table} WHERE id = ${id}`);
-    if (item?.length === 0) return null
+    const item = await accessData(
+      `SELECT * FROM ${table} WHERE ${this.name.toLocaleLowerCase()}_id = ${id}`
+    );
+    if (item?.length === 0) return null;
     const object = new obj_constructor(item?.at(0));
-    return Promise.resolve(object)
-    // const obj_initaliazed = object.init(object);
-    // return Promise.resolve(obj_initaliazed)
+    return object;
   }
 
   async save() {
-    const existingObj = this?.id
-    existingObj ? this.update(this) : this.create(this)
+    const existingObj = this?.id;
+    existingObj ? this.update(this) : this.create(this);
   }
 
   async create(attributes) {
-    const keysAndValues = Object.entries(attributes)
-    const filtered = keysAndValues.filter(([key, value]) => key !== 'id')
-    const objectWithoutId = Object.fromEntries(filtered)
-    console.log(objectWithoutId)
+    const keysAndValues = Object.entries(attributes);
+    const filtered = keysAndValues.filter(([key, value]) => key !== "id");
+    const objectWithoutId = Object.fromEntries(filtered);
 
-    insertData(objectWithoutId)
-    // const object = this.init(this)
-    const object = new this.constructor(this)
-    return object
+    insertData(`${this.tableName}s`, objectWithoutId);
+    const object = new this.constructor(this);
+    return object;
   }
 
   async update(attributes) {
-    let recordInDB = await this.constructor.find(this?.id)
-    const objectKeysAndValues = Object.entries(attributes)
+    let recordInDB = await this.constructor.find(this?.id);
+    const objectKeysAndValues = Object.entries(attributes);
     // Ne mettre à jour seulement que les données changées !
-    const diffKeysValues = objectKeysAndValues.filter(([key, value]) => recordInDB[key] !== value)
-    const query = diffKeysValues.map(([key, value]) => `${key} = '${value}'`).join()
+    const diffKeysValues = objectKeysAndValues.filter(
+      ([key, value]) => recordInDB[key] !== value
+    );
+    const query = diffKeysValues
+      .map(([key, value]) => `${key} = '${value}'`)
+      .join();
     if (query.length > 0) {
       // MAJ de l'objet en DB
-      await accessData(`UPDATE ${this.table()} SET ${query} WHERE id = ${attributes.id}`);
-      recordInDB = await this.constructor.find(this?.id)
-      console.log(recordInDB)
+      await accessData(
+        `UPDATE ${this.tableName()}s SET ${query} WHERE ${this.tableName()}_id = ${
+          attributes.id
+        }`
+      );
+      recordInDB = await this.constructor.find(this?.id);
     } else {
-      console.log("Aucun changement !")
+      console.log("Aucun changement !");
     }
-    return recordInDB
+    return recordInDB;
   }
 
   async delete() {
-    const record = await this.constructor.find(this.id)
-    console.log(record)
+    const record = await this.constructor.find(this.id);
+    console.log(record);
     if (record) {
-      await accessData(`DELETE FROM ${this.table()} WHERE id = ${this.id};`)
+      await accessData(
+        `DELETE FROM ${this.tableName()}s WHERE ${this.tableName()}_id = ${
+          this.id
+        };`
+      );
+      return true;
+    } else {
+      console.log("No instance found !");
     }
-    return true
   }
 
-  // async init(attributes) {
-  //   const cols = await this.getColumns();
-  //   for (let key in cols) {
-  //     this[cols[key]] = attributes[cols[key]];
-  //   }
-  //   return Promise.resolve(this);
-  // }
-
-  // async getColumns() {
-  //   const table = this.table();
-  //   return new Promise(async function (resolve, reject) {
-  //     const data = await accessData(`SELECT * FROM ${table}`);
-  //     const obj = await data?.at(0);
-  //     if (obj) {
-  //       const columns = Object.keys(obj);
-  //       resolve(columns);
-  //     }
-  //   });
-  // }
-
-  table() {
-    return `${this.constructor.name.toLocaleLowerCase()}s`
+  tableName() {
+    return `${this.constructor.name.toLocaleLowerCase()}`;
   }
 }

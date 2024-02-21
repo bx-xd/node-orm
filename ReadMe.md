@@ -51,6 +51,7 @@ let post = await Post.find(last.id)
 ###### To Delete a Post
 
 ```javascript
-let last = await Post.all()
+let posts = await Post.all()
+let last = await Post.last(-1) // or await Post.last(-5) doesn't matter
 last.delete()
 ```

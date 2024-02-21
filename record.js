@@ -40,7 +40,7 @@ export default class Record {
     const filtered = keysAndValues.filter(([key, value]) => key !== "id");
     const objectWithoutId = Object.fromEntries(filtered);
 
-    insertData(`${this.tableName}s`, objectWithoutId);
+    insertData(`${this.tableName()}s`, objectWithoutId);
     const object = new this.constructor(this);
     return object;
   }

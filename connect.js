@@ -42,7 +42,7 @@ export function insertData(tableName, attributes) {
     const questionsMark = keys.map((i) => "?").join();
     const values = Object.values(attributes)
     var insertQuery = db.prepare(
-      `INSERT INTO ${tableName} (${columns}) VALUES (${questionsMark})`
+      `INSERT INTO ${tableName} (${columns}) VALUES (${questionsMark});`
     );
     insertQuery.run(values);
 

@@ -29,6 +29,7 @@ export default class Record {
   async update(attributes) {
     let recordInDB = await this.constructor.find(this?.id)
     const objectKeysAndValues = Object.entries(attributes)
+    console.log('coucou')
     // Ne mettre à jour seulement que les données changées !
     const diffKeysValues = objectKeysAndValues.filter(([key, value]) => recordInDB[key] !== value)
     const query = diffKeysValues.map(([key, value]) => `${key} = '${value}'`).join()

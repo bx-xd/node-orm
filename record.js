@@ -9,6 +9,30 @@ export default class Record {
     // this.init(attributes);
   }
 
+  static async all() {
+    const table = `${this.name.toLocaleLowerCase()}s`;
+    const obj_constructor = this;
+    const data = await accessData(`SELECT * FROM ${table}`);
+    const records = data.map((obj) => {
+      const object = new obj_constructor(obj);
+      return object
+      // const obj_initaliazed = object.init(obj);
+      // return obj_initaliazed;
+    });
+    return Promise.all(records);
+  }
+
+  static async find(id) {
+    const table = `${this.name.toLocaleLowerCase()}s`;
+    const obj_constructor = this;
+    const item = await accessData(`SELECT * FROM ${table} WHERE id = ${id}`);
+    if (item?.length === 0) return null
+    const object = new obj_constructor(item?.at(0));
+    return Promise.resolve(object)
+    // const obj_initaliazed = object.init(object);
+    // return Promise.resolve(obj_initaliazed)
+  }
+
   async save() {
     const existingObj = this?.id
     existingObj ? this.update(this) : this.create(this)
@@ -29,7 +53,6 @@ export default class Record {
   async update(attributes) {
     let recordInDB = await this.constructor.find(this?.id)
     const objectKeysAndValues = Object.entries(attributes)
-    console.log('coucou')
     // Ne mettre à jour seulement que les données changées !
     const diffKeysValues = objectKeysAndValues.filter(([key, value]) => recordInDB[key] !== value)
     const query = diffKeysValues.map(([key, value]) => `${key} = '${value}'`).join()
@@ -44,28 +67,13 @@ export default class Record {
     return recordInDB
   }
 
-  static async find(id) {
-    const table = `${this.name.toLocaleLowerCase()}s`;
-    const obj_constructor = this;
-    const item = await accessData(`SELECT * FROM ${table} WHERE id = ${id}`);
-    if (item?.length === 0) return null
-    const object = new obj_constructor(item?.at(0));
-    return Promise.resolve(object)
-    // const obj_initaliazed = object.init(object);
-    // return Promise.resolve(obj_initaliazed)
-  }
-
-  static async all() {
-    const table = `${this.name.toLocaleLowerCase()}s`;
-    const obj_constructor = this;
-    const data = await accessData(`SELECT * FROM ${table}`);
-    const records = data.map((obj) => {
-      const object = new obj_constructor(obj);
-      return object
-      // const obj_initaliazed = object.init(obj);
-      // return obj_initaliazed;
-    });
-    return Promise.all(records);
+  async delete() {
+    const record = await this.constructor.find(this.id)
+    console.log(record)
+    if (record) {
+      await accessData(`DELETE FROM ${this.table()} WHERE id = ${this.id};`)
+    }
+    return true
   }
 
   // async init(attributes) {

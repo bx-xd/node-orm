@@ -23,17 +23,6 @@ export async function accessData(query) {
   });
 }
 
-async function db_all(query) {
-  return new Promise(function (resolve, reject) {
-    db.all(query, function (err, rows) {
-      if (err) {
-        return reject(err);
-      }
-      resolve(rows);
-    });
-  });
-}
-
 // To Insert Data
 export function insertData(tableName, attributes) {
   try {

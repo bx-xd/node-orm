@@ -37,7 +37,7 @@ let p1 = await Post.create({title: 'hello from terminal !', content: 'This is ve
 ```javascript
 let last = await Post.last()
 let p2 = await Post.find(last.id)
-p2 # return the last Post instance
+p2 // return the last Post instance
 await p2.update({title: 'New Funny Title !'})
 ```
 

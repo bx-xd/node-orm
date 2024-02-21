@@ -19,4 +19,4 @@ import Record from "./record.js";
 //   console.log("server is ready !");
 // });
 
-export { Post, Record };
+export { Post };

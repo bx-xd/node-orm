@@ -14,7 +14,7 @@ To try it run `node`
 
 `const orm = await import('./main.js')`
 
-`const Post = orm.Post`
+`const { Post } = orm`
 
 And ready to run
 

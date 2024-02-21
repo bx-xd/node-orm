@@ -19,12 +19,13 @@ class Record {
     return Promise.all(records);
   }
 
-  static async last() {
+  static async last(index = -1) {
     const table = `${this.name.toLocaleLowerCase()}s`;
     const data = await sendQuery(`SELECT * FROM ${table}`);
-    const last = new this(data.at(-1))
-
-    return Promise.resolve(last);
+    if (Math.abs(index) > data.length) {
+      return console.log("This instance doesn't exist at this index!")
+    }
+    return new this(data.at(index));
   }
 
   static async find(recordID) {
@@ -40,8 +41,9 @@ class Record {
   }
 
   async save() {
-    const existingObj = this[`${this.tableName()}s_id`];
-    existingObj ? this.update(this) : this.construtor.create(this);
+    const existingObj = this.id;
+    existingObj ? this.update(this) : this.constructor.create(this)
+    // await this.construtor.create(this);
   }
 
   static async create(attributes) {
@@ -58,10 +60,10 @@ class Record {
     const id = this.id;
     if (!id || !this) return console.error("You can't update an non-persisting Instance !")
     let recordInDB = await this.constructor.find(id);
-    const objectKeysAndValues = Object.entries(attributes);
-    // Ne mettre à jour seulement que les données changées !
-    const diffKeysValues = objectKeysAndValues.filter(
-      ([key, value]) => recordInDB[key] !== value
+  const objectKeysAndValues = Object.entries(attributes);
+  // Ne mettre à jour seulement que les données changées !
+  const diffKeysValues = objectKeysAndValues.filter(
+    ([key, value]) => recordInDB[key] !== value
     );
     const valuesWithoutId = Object.entries(attributes)
       .filter(([k, v]) => k !== 'id')

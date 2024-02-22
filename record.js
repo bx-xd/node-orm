@@ -1,9 +1,10 @@
 import { sendQuery, insertData, updateData } from "./connect.js";
 
 class Record {
-  constructor(attributes) {
-    const keys = Object.entries(attributes);
-    keys.forEach(([key, value]) => {
+  constructor(attributes = {}) {
+    if (this.constructor.checkIsEmpty(attributes)) return;
+    const keysAndValues = Object.entries(attributes);
+    keysAndValues.forEach(([key, value]) => {
       this[key] = value;
     });
   }
@@ -23,7 +24,7 @@ class Record {
     const table = `${this.name.toLocaleLowerCase()}s`;
     const data = await sendQuery(`SELECT * FROM ${table}`);
     if (Math.abs(index) > data.length) {
-      return console.log("This instance doesn't exist at this index!")
+      return console.log("This instance doesn't exist at this index!");
     }
     return new this(data.at(index));
   }
@@ -42,11 +43,12 @@ class Record {
 
   async save() {
     const existingObj = this.id;
-    existingObj ? this.update(this) : this.constructor.create(this)
-    // await this.construtor.create(this);
+    existingObj ? this.update(this) : this.constructor.create(this);
   }
 
   static async create(attributes) {
+    if (this.checkIsEmpty(attributes))
+      return console.error("You can't save an empty object!");
     const keysAndValues = Object.entries(attributes);
     const filtered = keysAndValues.filter(([key, value]) => key !== "id");
     const objectWithoutId = Object.fromEntries(filtered);
@@ -58,15 +60,16 @@ class Record {
 
   async update(attributes) {
     const id = this.id;
-    if (!id || !this) return console.error("You can't update an non-persisting Instance !")
+    if (!id || !this || this.constructor.checkIsEmpty(attributes))
+      return console.error("You can't update an non-persisting Instance !");
     let recordInDB = await this.constructor.find(id);
-  const objectKeysAndValues = Object.entries(attributes);
-  // Ne mettre à jour seulement que les données changées !
-  const diffKeysValues = objectKeysAndValues.filter(
-    ([key, value]) => recordInDB[key] !== value
+    const objectKeysAndValues = Object.entries(attributes);
+    // Ne mettre à jour seulement que les données changées !
+    const diffKeysValues = objectKeysAndValues.filter(
+      ([key, value]) => recordInDB[key] !== value
     );
     const valuesWithoutId = Object.entries(attributes)
-      .filter(([k, v]) => k !== 'id')
+      .filter(([k, v]) => k !== "id")
       .map(([k, v]) => v)
       .join();
     const columnsEntries = diffKeysValues
@@ -85,13 +88,12 @@ class Record {
 
   async delete() {
     const id = this?.id;
-    if (!id) return console.error("You can't delete an non-persisting Instance !");
+    if (!id)
+      return console.error("You can't delete an non-persisting Instance !");
     const record = await this.constructor.find(id);
     console.log(record);
     if (record) {
-      await sendQuery(
-        `DELETE FROM ${this.tableName()}s WHERE id = ${id};`
-      );
+      await sendQuery(`DELETE FROM ${this.tableName()}s WHERE id = ${id};`);
       return true;
     } else {
       console.log("No instance found !");
@@ -100,6 +102,13 @@ class Record {
 
   tableName() {
     return `${this.constructor.name.toLocaleLowerCase()}`;
+  }
+
+  static checkIsEmpty(object) {
+    if (Object.keys(object).length === 0) {
+      console.log("Empty Object!");
+      return true;
+    }
   }
 }
 

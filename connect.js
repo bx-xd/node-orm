@@ -59,7 +59,7 @@ export function insertData(tableName, attributes) {
 }
 
 // SEEDS
-export function insertPosts() {
+function insertPosts() {
   const posts = [
     ["titre1", "mon contenu 1"],
     ["titre2", "mon contenu 2"],

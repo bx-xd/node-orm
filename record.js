@@ -2,6 +2,7 @@ import { sendQuery, insertData, updateData } from "./connect.js";
 
 class Record {
   constructor(attributes = {}) {
+    this.errors = {};
     if (this.constructor.checkIsEmpty(attributes)) return;
     const keysAndValues = Object.entries(attributes);
     keysAndValues.forEach(([key, value]) => {
@@ -43,6 +44,10 @@ class Record {
 
   async save() {
     const existingObj = this.id;
+    if (!this.isValid()) {
+      console.error("Validation errors:", this.errors);
+      return this 
+    }
     existingObj ? this.update(this) : this.constructor.create(this);
   }
 
@@ -50,7 +55,7 @@ class Record {
     if (this.checkIsEmpty(attributes))
       return console.error("You can't save an empty object!");
     const keysAndValues = Object.entries(attributes);
-    const filtered = keysAndValues.filter(([key, value]) => key !== "id");
+    const filtered = keysAndValues.filter(([key, value]) => key !== "id" && key !== "errors");
     const objectWithoutId = Object.fromEntries(filtered);
 
     insertData(`${this.name.toLocaleLowerCase()}s`, objectWithoutId);
@@ -69,7 +74,7 @@ class Record {
       ([key, value]) => recordInDB[key] !== value
     );
     const valuesWithoutId = Object.entries(attributes)
-      .filter(([k, v]) => k !== "id")
+      .filter(([key, value]) => key !== "id" && key !== "errors")
       .map(([k, v]) => v)
       .join();
     const columnsEntries = diffKeysValues
@@ -109,6 +114,19 @@ class Record {
       console.log("Empty Object!");
       return true;
     }
+  }
+
+  isValid() {
+    this.errors = {};
+    const validations = this.constructor.validations || {};
+    Object.entries(validations).forEach(([attr, rules]) => {
+      rules.forEach(rule => {
+        if (rule.validate && !rule.validate(this[attr])) {
+          this.errors[attr] = rule.message || "Validation failed";
+        }
+      });
+    });
+    return Object.keys(this.errors).length === 0;
   }
 }
 

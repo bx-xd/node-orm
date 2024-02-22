@@ -85,7 +85,6 @@ db.serialize(async function () {
     "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL );"
   );
   let posts = await sendQuery("SELECT * FROM posts");
-  console.log("POSTS in serializer! ", posts);
   if (posts.length === 0) {
     insertPosts();
   }

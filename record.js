@@ -30,7 +30,7 @@ class Record {
   }
 
   static async find(recordID) {
-    if (!recordID) return console.error("This instance doesn't exit in DB !");
+    if (!recordID) return console.error("This instance doesn't exist in DB !");
     const table = `${this.name.toLocaleLowerCase()}s`;
     const obj_constructor = this;
     const item = await sendQuery(

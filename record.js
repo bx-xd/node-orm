@@ -1,13 +1,11 @@
 import { sendQuery, insertData, updateData } from "./connect.js";
 
 class Record {
-  constructor(attributes = {}) {
+  constructor(attributes) {
     this.errors = {};
-    if (this.constructor.checkIsEmpty(attributes)) return;
-    const keysAndValues = Object.entries(attributes);
-    keysAndValues.forEach(([key, value]) => {
-      this[key] = value;
-    });
+    if (attributes) {
+      Object.assign(this, attributes);
+    }
   }
 
   static async all() {
@@ -18,14 +16,14 @@ class Record {
       const object = new obj_constructor(obj);
       return object;
     });
-    return Promise.all(records);
+    return records;
   }
 
   static async last(index = -1) {
     const table = `${this.name.toLocaleLowerCase()}s`;
     const data = await sendQuery(`SELECT * FROM ${table}`);
     if (Math.abs(index) > data.length) {
-      return console.log("This instance doesn't exist at this index!");
+      return console.error("This instance doesn't exist at this index!");
     }
     return new this(data.at(index));
   }
@@ -46,7 +44,7 @@ class Record {
     const existingObj = this.id;
     if (!this.isValid()) {
       console.error("Validation errors:", this.errors);
-      return this 
+      return this.errors;
     }
     existingObj ? this.update(this) : this.constructor.create(this);
   }
@@ -55,7 +53,9 @@ class Record {
     if (this.checkIsEmpty(attributes))
       return console.error("You can't save an empty object!");
     const keysAndValues = Object.entries(attributes);
-    const filtered = keysAndValues.filter(([key, value]) => key !== "id" && key !== "errors");
+    const filtered = keysAndValues.filter(
+      ([key, value]) => key !== "id" && key !== "errors"
+    );
     const objectWithoutId = Object.fromEntries(filtered);
 
     insertData(`${this.name.toLocaleLowerCase()}s`, objectWithoutId);
@@ -86,7 +86,7 @@ class Record {
       updateData(this.tableName(), columnsEntries, id, valuesWithoutId);
       recordInDB = await this.constructor.find(id);
     } else {
-      console.log("Aucun changement !");
+      console.log("No Change !");
     }
     return recordInDB;
   }
@@ -120,9 +120,12 @@ class Record {
     this.errors = {};
     const validations = this.constructor.validations || {};
     Object.entries(validations).forEach(([attr, rules]) => {
-      rules.forEach(rule => {
-        if (rule.validate && !rule.validate(this[attr])) {
-          this.errors[attr] = rule.message || "Validation failed";
+      const shouldPresent = rules.map((i) => i?.presence === true);
+      rules.forEach((rule) => {
+        if (shouldPresent && !this[attr]?.length > 0) {
+          this.errors[attr] = [`${attr} can't be blank`];
+        } else if (rule.validate && !rule.validate(this[attr])) {
+          this.errors[attr] = [...(this.errors[attr] ?? []), rule.message];
         }
       });
     });

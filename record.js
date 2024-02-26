@@ -10,10 +10,9 @@ class Record {
 
   static async all() {
     const table = `${this.name.toLocaleLowerCase()}s`;
-    const obj_constructor = this;
     const data = await sendQuery(`SELECT * FROM ${table}`);
     const records = data.map((obj) => {
-      const object = new obj_constructor(obj);
+      const object = new this(obj);
       return object;
     });
     return records;
@@ -31,12 +30,11 @@ class Record {
   static async find(recordID) {
     if (!recordID) return console.error("This instance doesn't exist in DB !");
     const table = `${this.name.toLocaleLowerCase()}s`;
-    const obj_constructor = this;
     const item = await sendQuery(
       `SELECT * FROM ${table} WHERE id = ${recordID}`
     );
     if (item?.length === 0) return null;
-    const object = new obj_constructor(item?.at(0));
+    const object = new this(item?.at(0));
     return object;
   }
 

@@ -48,15 +48,28 @@ class Record {
   }
 
   static async create(attributes) {
-    if (this.checkIsEmpty(attributes))
-      return console.error("You can't save an empty object!");
+    // Si il n'existe pas d'attributs, on retourne une erreur
+    if (Object.keys(attributes).length === 0)
+      return console.error("Empty object");
+    // on déconstruit l'objet
     const keysAndValues = Object.entries(attributes);
-    const filtered = keysAndValues.filter(
-      ([key, value]) => key !== "id" && key !== "errors"
+    const acceptedCols = await this.getColumns();
+    const unexpectedKeys = Object.keys(attributes).filter(
+      (key) => !acceptedCols.includes(key)
     );
-    const objectWithoutId = Object.fromEntries(filtered);
-
-    insertData(`${this.name.toLocaleLowerCase()}s`, objectWithoutId);
+    if (unexpectedKeys)
+      return console.error(
+        `Unexpected keys for ${this.name} : ${unexpectedKeys.join()} `
+      );
+    const filtered = keysAndValues.filter(([key, value]) =>
+      acceptedCols.includes(key)
+    );
+    // on reconstruit l'objet
+    const filteredObject = Object.fromEntries(filtered);
+    // Si il n'existe pas d'attributs, on retourne une erreur
+    if (Object.keys(filteredObject).length === 0)
+      return console.error("Empty object");
+    insertData(`${this.name.toLocaleLowerCase()}s`, filteredObject);
     const object = new this(attributes);
     return object;
   }
@@ -67,12 +80,22 @@ class Record {
       return console.error("You can't update an non-persisting Instance !");
     let recordInDB = await this.constructor.find(id);
     const objectKeysAndValues = Object.entries(attributes);
+    const acceptedCols = await this.constructor.getColumns();
+    const unexpectedKeys = Object.keys(attributes).filter(
+      (key) => !acceptedCols.includes(key)
+    );
+    if (unexpectedKeys)
+      return console.error(
+        `Unexpected keys for ${
+          this.constructor.name
+        } : ${unexpectedKeys.join()} `
+      );
     // Ne mettre à jour seulement que les données changées !
     const diffKeysValues = objectKeysAndValues.filter(
       ([key, value]) => recordInDB[key] !== value
     );
-    const valuesWithoutId = Object.entries(attributes)
-      .filter(([key, value]) => key !== "id" && key !== "errors")
+    const filteredObject = Object.entries(attributes)
+      .filter(([key, value]) => acceptedCols.includes(key))
       .map(([k, v]) => v)
       .join();
     const columnsEntries = diffKeysValues
@@ -81,7 +104,7 @@ class Record {
     if (diffKeysValues.length > 0) {
       // MAJ de l'objet en DB
 
-      updateData(this.tableName(), columnsEntries, id, valuesWithoutId);
+      updateData(this.tableName(), columnsEntries, id, filteredObject);
       recordInDB = await this.constructor.find(id);
     } else {
       console.log("No Change !");
@@ -128,6 +151,10 @@ class Record {
       });
     });
     return Object.keys(this.errors).length === 0;
+  }
+  static async getColumns() {
+    const data = await sendQuery(`PRAGMA table_info(${this.name}s)`);
+    return data.map((col) => col.name).filter((col) => col !== "id");
   }
 }
 

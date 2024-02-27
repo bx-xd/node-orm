@@ -1,23 +1,23 @@
 import Record from "../record.js";
 
-class Post extends Record {
+class User extends Record {
   constructor(props) {
     super(props);
   }
 
   static relationship = {
-    belongsTo: "user"
+    hasMany: "post"
   }
 
   static validations = {
-    title: [
+    pseudo: [
       { presence: true },
-      { validate: value => value && value.length <= 100, message: "Title is too long" }
+      { validate: value => value && value.length <= 26, message: "Pseudo is too long" }
     ],
-    content: [
+    password: [
       { presence: true }
     ]
   };
 }
 
-export default Post;
+export default User;

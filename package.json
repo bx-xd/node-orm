@@ -1,5 +1,5 @@
 {
-  "name": "my-first-orm",
+  "name": "node-orm",
   "description": "A didactic orm",
   "version": "0.0.1",
   "dependencies": {
@@ -7,7 +7,21 @@
     "sqlite3": "^5.1.7"
   },
   "scripts": {
-    "server": "node --watch main.js"
+    "server": "node --watch main.js",
+    "test": "jest"
   },
-  "type": "module"
+  "type": "module",
+  "exports": "./main.js",
+  "jest": {
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    }
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.9",
+    "@babel/preset-env": "^7.23.9",
+    "@jest/globals": "^29.7.0",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0"
+  }
 }

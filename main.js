@@ -1,5 +1,6 @@
 import express from "express";
 import Post from "./models/post.js";
+import User from "./models/user.js";
 import Record from "./record.js";
 
 
@@ -19,4 +20,4 @@ import Record from "./record.js";
 //   console.log("server is ready !");
 // });
 
-export { Post };
+export { Post, User };

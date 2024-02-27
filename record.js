@@ -6,6 +6,31 @@ class Record {
     if (attributes) {
       Object.assign(this, attributes);
     }
+
+    const relation = this.constructor.relationship;
+    if (relation.belongsTo) {
+      (async () => {
+        const modelBelong = await import(
+          `./models/${relation.belongsTo.toLowerCase()}.js`
+        );
+        const model = modelBelong.default;
+        const modelName = await model.name.toLowerCase();
+        this[modelName] = async () => await model.find(this[`${modelName}_id`]);
+      })();
+    }
+    if (relation.hasMany) {
+      (async () => {
+        const modelBelong = await import(
+          `./models/${relation.hasMany.toLowerCase()}.js`
+        );
+        const model = modelBelong.default;
+        const modelName = await model.name.toLowerCase();
+        this[`${modelName}s`] = async () =>
+          await model.find_by({
+            [`${this.constructor.name.toLowerCase()}_id`]: this.id,
+          });
+      })();
+    }
   }
 
   static async all() {
@@ -30,12 +55,23 @@ class Record {
   static async find(recordID) {
     if (!recordID) return console.error("This instance doesn't exist in DB !");
     const table = `${this.name.toLocaleLowerCase()}s`;
-    const item = await sendQuery(
+    const items = await sendQuery(
       `SELECT * FROM ${table} WHERE id = ${recordID}`
     );
-    if (item?.length === 0) return null;
-    const object = new this(item?.at(0));
+    if (items?.length === 0) return null;
+    const object = new this(items?.at(0));
     return object;
+  }
+
+  static async find_by(attributes) {
+    if (!attributes)
+      return console.error("This instance doesn't exist in DB !");
+    const table = `${this.name.toLocaleLowerCase()}s`;
+    const whereQuery = Object.keys(attributes).map(
+      (i) => `${i} = '${attributes[i]}'`
+    );
+    const items = await sendQuery(`SELECT * FROM ${table} WHERE ${whereQuery}`);
+    return items;
   }
 
   async save() {
@@ -44,7 +80,11 @@ class Record {
       console.error("Validation errors:", this.errors);
       return this.errors;
     }
-    existingObj ? this.update(this) : this.constructor.create(this);
+    if (existingObj) {
+      return this.update(this);
+    } else {
+      return this.constructor.create(this);
+    }
   }
 
   static async create(attributes) {
@@ -54,24 +94,21 @@ class Record {
     // on déconstruit l'objet
     const keysAndValues = Object.entries(attributes);
     const acceptedCols = await this.getColumns();
-    const unexpectedKeys = Object.keys(attributes).filter(
-      (key) => !acceptedCols.includes(key)
-    );
-    if (unexpectedKeys)
-      return console.error(
-        `Unexpected keys for ${this.name} : ${unexpectedKeys.join()} `
-      );
+    // On filtre pour ne garder que les colonnes voulues en DB
     const filtered = keysAndValues.filter(([key, value]) =>
       acceptedCols.includes(key)
     );
+
+    // Si il n'existe pas d'attributs, on retourne une erreur
+    if (Object.keys(filtered).length === 0)
+      return console.error("Empty object after filtering");
     // on reconstruit l'objet
     const filteredObject = Object.fromEntries(filtered);
-    // Si il n'existe pas d'attributs, on retourne une erreur
-    if (Object.keys(filteredObject).length === 0)
-      return console.error("Empty object");
     insertData(`${this.name.toLocaleLowerCase()}s`, filteredObject);
-    const object = new this(attributes);
-    return object;
+    // On prend en DB l'objet et on le redonne passé dans le moule de la classe
+    const lastSaved = await this.last();
+    const record = await this.find(lastSaved.id);
+    return new this(record);
   }
 
   async update(attributes) {
@@ -79,32 +116,20 @@ class Record {
     if (!id || !this || this.constructor.checkIsEmpty(attributes))
       return console.error("You can't update an non-persisting Instance !");
     let recordInDB = await this.constructor.find(id);
-    const objectKeysAndValues = Object.entries(attributes);
+
     const acceptedCols = await this.constructor.getColumns();
-    const unexpectedKeys = Object.keys(attributes).filter(
-      (key) => !acceptedCols.includes(key)
-    );
-    if (unexpectedKeys)
-      return console.error(
-        `Unexpected keys for ${
-          this.constructor.name
-        } : ${unexpectedKeys.join()} `
-      );
-    // Ne mettre à jour seulement que les données changées !
-    const diffKeysValues = objectKeysAndValues.filter(
-      ([key, value]) => recordInDB[key] !== value
-    );
-    const filteredObject = Object.entries(attributes)
+    // Ne mettre à jour seulement que les données changées et les colonnes acceptées !
+    const objectKeysAndValues = Object.entries(attributes)
       .filter(([key, value]) => acceptedCols.includes(key))
-      .map(([k, v]) => v)
-      .join();
-    const columnsEntries = diffKeysValues
+      .filter(([key, value]) => recordInDB[key] !== value);
+
+    const filteredValues = objectKeysAndValues.map(([k, v]) => v).join();
+    const columnsEntries = objectKeysAndValues
       .map(([key, value]) => `${key} = ?`)
       .join();
-    if (diffKeysValues.length > 0) {
+    if (objectKeysAndValues.length > 0) {
       // MAJ de l'objet en DB
-
-      updateData(this.tableName(), columnsEntries, id, filteredObject);
+      updateData(this.tableName(), columnsEntries, id, filteredValues);
       recordInDB = await this.constructor.find(id);
     } else {
       console.log("No Change !");
@@ -117,12 +142,12 @@ class Record {
     if (!id)
       return console.error("You can't delete an non-persisting Instance !");
     const record = await this.constructor.find(id);
-    console.log(record);
     if (record) {
       await sendQuery(`DELETE FROM ${this.tableName()}s WHERE id = ${id};`);
       return true;
     } else {
       console.log("No instance found !");
+      return false;
     }
   }
 

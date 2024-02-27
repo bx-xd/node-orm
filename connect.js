@@ -53,8 +53,10 @@ export function insertData(tableName, attributes) {
     insertQuery.run(values);
 
     insertQuery.finalize();
+    return true;
   } catch (e) {
     console.log("erreur dans l'INSERT", e);
+    return false;
   }
 }
 
@@ -82,8 +84,12 @@ function insertPosts() {
 // We poeple DB
 db.serialize(async function () {
   db.run(
-    "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL );"
+    "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, pseudo TEXT NOT NULL, password TEXT NOT NULL );"
   );
+  db.run(
+    "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL, user_id INTEGER, FOREIGN KEY (user_id) REFERENCES users(id));"
+  );
+
   let posts = await sendQuery("SELECT * FROM posts");
   if (posts.length === 0) {
     insertPosts();

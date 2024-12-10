@@ -1,5 +1,5 @@
 {
-  "name": "node-orm",
+  "name": "humble-node-orm",
   "description": "A didactic orm",
   "version": "0.0.2",
   "dependencies": {

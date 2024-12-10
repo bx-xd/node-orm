@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { User, Post } from "../main";
+import { User, Post } from "..";
 
 describe("All", () => {
   test("can list", async () => {

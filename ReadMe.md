@@ -4,54 +4,45 @@
 
 This is a humble beat of code inspired by Rails' ActiveRecord. My goal was to rebuild skeleton of ActiveRecord in plain Javascript ! I know, I know, there's a lot of it already...
 
-## Setup
-
-To run and try this ORM, run in your terminal :
+Setup
 
 To install depencies : `yarn install` or `npm install` or `pnpm install`
 
-To try it run `node`
+In order to use this humble ORM, you need two things :
 
-`const orm = await import('./main.js')`
+- configuration :
 
-`const { Post } = orm`
-
-And ready to run
-
-## To play
-
-###### List all Post
-
-```javascript
-let posts = await Post.all()
-```
-
-###### To Create a Post
+  ```javascript
+  import { ORM } from 'node-orm'; 
+  const orm = new ORM({
+    type: 'sqlite',  // Type de base de données (sqlite, mysql, etc.)
+    database: ':memory:', // Nom de la base de données ou chemin
+  });
+  ```
+- utilisation :
 
 ```javascript
-let p1 = await Post.create({title: 'hello from terminal !', content: 'This is very fun !'})
+import { Model } from 'node-orm'; 
+class <ModelName> extends Model {
+  constructor(data) {
+    super(orm, '<tableName>', data);
+  }
+}
 ```
 
-###### To update a Post
+You can see an example in `example.js`
 
-```javascript
-let last = await Post.last()
-let p2 = await Post.find(last.id)
-p2 // return the last Post instance
-await p2.update({title: 'New Funny Title !'})
-```
+## API
 
-###### To Find a Post
+#### 1. **Class methods for a model :**
 
-```javascript
-let last = await Post.all()
-let post = await Post.find(last.id)
-```
+* `Model.all() `: get all entries from table.
+* `Model.create(data) `: create a new entry to table.
+* `Model.last(orderByColumn = 'id')` : get last entry, sort by specific column.
+* `Model.find(conditions)` : get all entries corresponding to specified conditions.
+* `Model.findById(id)` : get a entry by its id.
 
-###### To Delete a Post
+#### 2. **Instance methods  :**
 
-```javascript
-let posts = await Post.all()
-let last = await Post.last(-1) // or await Post.last(-5) doesn't matter
-last.delete()
-```
+* `instance.update(data)` : update an instance with new data.
+* `instance.delete()` : delete an entry from table.

@@ -8,7 +8,10 @@
     "sqlite3": "^5.1.7"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "migration:create": "node ./scripts/migration/create.js",
+    "migration:run": "node ./scripts/migration/run.js",
+    "migration:revert": "node ./scripts/migration/revert.js"
   },
   "type": "module",
   "exports": "./index.js",

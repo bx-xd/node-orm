@@ -1,22 +1,17 @@
-import { ORM, Model } from './index.js';
-
-// Initialisation de l'ORM
-const db = new ORM({
-  type: 'sqlite',
-  database: ':memory:'
-});
+import { Model } from './index.js';
+import orm from './lib/orm-config-loader.js'
 
 // Define User Model
 class User extends Model {
   constructor(data) {
-    super(db, 'users', data);
+    super('users', data);
   }
 }
 
 // Use case
 async function main() {
   try {
-    await db.connection.query(`CREATE TABLE users (id INTEGER PRIMARY KEY, pseudo TEXT, password TEXT)`);
+    await orm.connection.query(`CREATE TABLE users (id INTEGER PRIMARY KEY, pseudo TEXT, password TEXT)`);
 
     // create a new user
     const newUser = await User.create({ pseudo: 'Alice', password: 'alice123' });
@@ -49,7 +44,7 @@ async function main() {
   } catch (err) {
     console.error(err);
   } finally {
-    db.close();
+    orm.close();
   }
 }
 

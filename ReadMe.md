@@ -12,12 +12,18 @@ In order to use this humble ORM, you need two things :
 
 - configuration :
 
+  1. Create a file at the root of your project named `node-orm.config.js`
+  2. Setup your configuration with specific parameters :
+
   ```javascript
-  import { ORM } from 'node-orm'; 
+  import ORM from 'node-orm';
+
   const orm = new ORM({
-    type: 'sqlite',  // Type de base de données (sqlite, mysql, etc.)
-    database: ':memory:', // Nom de la base de données ou chemin
+    type: 'sqlite',
+    database: './databases/test.db',
   });
+
+  export default orm;
   ```
 - utilisation :
 
@@ -31,6 +37,12 @@ class <ModelName> extends Model {
 ```
 
 You can see an example in `example.js`
+
+
+### Migrations
+
+You can generate a migration file to update database :
+
 
 ## API
 

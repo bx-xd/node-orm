@@ -3,45 +3,45 @@ import { ORM, Model } from './index.js';
 // Initialisation de l'ORM
 const db = new ORM({
   type: 'sqlite',
-  database: ':memory:',
+  database: ':memory:'
 });
 
-// Définir le modèle `User`
+// Define User Model
 class User extends Model {
   constructor(data) {
     super(db, 'users', data);
   }
 }
 
-// Exemple d'utilisation
+// Use case
 async function main() {
   try {
     await db.connection.query(`CREATE TABLE users (id INTEGER PRIMARY KEY, pseudo TEXT, password TEXT)`);
 
-    // Créer un nouvel utilisateur
+    // create a new user
     const newUser = await User.create({ pseudo: 'Alice', password: 'alice123' });
     console.log('New User:', newUser);
 
-    // Récupérer le dernier utilisateur
+    // Get the last user
     const lastUser = await User.last();
     console.log('Last User:', lastUser);
 
-    // Récupérer tous les utilisateurs
+    // Get all users
     const users = await User.all();
     console.log('All Users:', users);
 
-    // Récupérer un utilisateur par ID
+    // Fetch a specific user by ID
     const foundUser = await User.findById(1);
     console.log('Found User:', foundUser);
 
-    // Mettre à jour le dernier utilisateur
+    // Update an instance of User
     if (lastUser) {
       const updatedUser = await lastUser.update({ pseudo: 'alice_updated' });
       console.log('Updated User:', updatedUser);
       console.log(await User.findById(lastUser.id));
     }
 
-    // Supprimer l'utilisateur
+    // Delete an instance of User
     await lastUser.delete();
     console.log('User deleted');
 

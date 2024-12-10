@@ -3,39 +3,49 @@ import { ORM, Model } from './index.js';
 // Initialisation de l'ORM
 const db = new ORM({
   type: 'sqlite',
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: './databases/test.db'
+  database: ':memory:',
 });
 
-
+// Définir le modèle `User`
 class User extends Model {
-  constructor() {
-    super(db, 'users');
+  constructor(data) {
+    super(db, 'users', data);
   }
 }
 
-const userModel = new User();
-
+// Exemple d'utilisation
 async function main() {
   try {
-    // Créer un utilisateur
-    await userModel.create({ pseudo: 'Alice', password: 'kikou' });
+    await db.connection.query(`CREATE TABLE users (id INTEGER PRIMARY KEY, pseudo TEXT, password TEXT)`);
 
-    // Trouver un utilisateur par ID
-    const user = await userModel.last();
-    console.log('User:', user, user.id);
+    // Créer un nouvel utilisateur
+    const newUser = await User.create({ pseudo: 'Alice', password: 'alice123' });
+    console.log('New User:', newUser);
 
-    const alice = await userModel.findById(user.id);
-    console.log('User:', alice, alice.id);
-    // // Mettre à jour un utilisateur
-    const updatedUser = await userModel.update({ id: user.id }, { pseudo: 'Alicia' });
-    console.log('MAJ User:', updatedUser);
+    // Récupérer le dernier utilisateur
+    const lastUser = await User.last();
+    console.log('Last User:', lastUser);
 
-    console.log(await userModel.all());
-    // Supprimer un utilisateur
-    await userModel.delete({ id: user.id });
+    // Récupérer tous les utilisateurs
+    const users = await User.all();
+    console.log('All Users:', users);
+
+    // Récupérer un utilisateur par ID
+    const foundUser = await User.findById(1);
+    console.log('Found User:', foundUser);
+
+    // Mettre à jour le dernier utilisateur
+    if (lastUser) {
+      const updatedUser = await lastUser.update({ pseudo: 'alice_updated' });
+      console.log('Updated User:', updatedUser);
+      console.log(await User.findById(lastUser.id));
+    }
+
+    // Supprimer l'utilisateur
+    await lastUser.delete();
+    console.log('User deleted');
+
+    console.log('All Users:', await User.all());
   } catch (err) {
     console.error(err);
   } finally {

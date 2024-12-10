@@ -13,7 +13,7 @@ In order to use this humble ORM, you need two things :
 - configuration :
 
   1. Create a file at the root of your project named `node-orm.config.js`
-  2. Setup your configuration with specific parameters :
+  2. Setup your configuration with specific parameters, for example :
 
   ```javascript
   import ORM from 'node-orm';
@@ -43,6 +43,11 @@ You can see an example in `example.js`
 
 You can generate a migration file to update database :
 
+`npm run migration:create < nameOfYourMigration >` => a file will be created into ./migrations folder
+
+`npm run migration:run` => it will play the migration file
+
+`npm run migration:revert` => it will revert the last migration file
 
 ## API
 

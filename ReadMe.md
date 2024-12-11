@@ -10,7 +10,6 @@ In order to use this humble ORM, you need two things :
 
 **1. Install package** : `npm install humble-node-orm`
 
-
 **2. Write a configuration file** :
 
 Create a file at the root of your project named `node-orm.config.json`
@@ -24,18 +23,25 @@ Create a file at the root of your project named `node-orm.config.json`
 
 with this example, create a file into `database` folder named `test.db` à the root of your project
 
-
 ## Utilisation
 
 ```javascript
 import { Model, ORM } from 'humble-node-orm';
 
+class Post extends Model {
+  constructor(data) {
+    super(data);
+    this.belongsTo(User);
+  }
+}
 // Define User Model
 class User extends Model {
   constructor(data) {
     super(data);
+    this.hasMany(Post);
     this.addValidation('pseudo', this.validatePseudo);
   }
+
   validatePseudo(pseudo) {
     return pseudo.length > 3;
   }
@@ -67,19 +73,31 @@ async function main() {
     const foundUser = await User.findById(1);
     console.log('Found User:', foundUser);
 
+    // Get all posts of a user
+    const userPosts = await foundUser.posts;
+    console.log('User Posts:', userPosts);
+
+    // Get user of a post
+    const writer = await userPosts.at(0).user;
+    console.log('Post Writer:', writer);
+
     // Update an instance of User
     if (lastUser) {
-	// This update will raise an validation error !
-      const updatedUser = await lastUser.update({ pseudo: 'new' });
+      const updatedUser = await lastUser.update({ pseudo: 'new_alice' });
       console.log('Updated User:', updatedUser);
-      console.log(await User.findById(lastUser.id));
     }
 
     // Delete an instance of User
     await lastUser.delete();
     console.log('User deleted');
 
-    console.log('All Users:', await User.all());
+    // Create a new not persisted instance
+    const newUser2 = new User({ pseudo: 'Bobby', password: 'bob123' });
+    console.log('Not persisted New User:', newUser2);
+    const persistedUser2 = await newUser2.save();
+    console.log('Persisted User:', persistedUser2);
+
+    await newUser2.delete();
   } catch (err) {
     console.error(err);
   } finally {
@@ -123,9 +141,16 @@ You can handle a migration file to update database :
 * `instance.update(data)` : update an instance with new data.
 * `instance.delete()` : delete an entry from table.
 
-
 #### 3. Validations
 
 Model as abstract class of any model expose a method that add validation(s) for a specific field
 
 - `addValidation(column, callback_validation)` : this method must be declared into specific model that have a field must be validate. `field` is a string corresponding to a column of the model table and `callback_validation` is the function that will execute before insert or update a instance of model
+
+#### 4. Relationship
+
+Model expose two methods to define relationship between models :
+
+- `hasMany(model, foreignKey = 'id')` : define a one-to-many relationship between two models
+
+- `belongsTo(model, primaryKey = 'id')` : define a one-to-one relationship between two models

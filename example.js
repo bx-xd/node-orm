@@ -57,14 +57,19 @@ async function main() {
     if (lastUser) {
       const updatedUser = await lastUser.update({ pseudo: 'new_alice' });
       console.log('Updated User:', updatedUser);
-      console.log(await User.findById(lastUser.id));
     }
 
     // Delete an instance of User
     await lastUser.delete();
     console.log('User deleted');
 
-    console.log('All Users:', await User.all());
+    // Create a new not persisted instance
+    const newUser2 = new User({ pseudo: 'Bobby', password: 'bob123' });
+    console.log('Not persisted New User:', newUser2);
+    const persistedUser2 = await newUser2.save();
+    console.log('Persisted User:', persistedUser2);
+
+    await newUser2.delete();
   } catch (err) {
     console.error(err);
   } finally {

@@ -1,5 +1,5 @@
-import Migration from '../../lib/migration.js';
-import orm from '../../node-orm.config.js';
+import { Migration } from '../../index.js';
+import orm from '../../lib/orm-config-loader.js';
 
 const migration = new Migration();
 

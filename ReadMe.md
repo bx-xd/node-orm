@@ -87,13 +87,17 @@ You can see an example in `example.js`
 
 ### Migrations
 
-You can generate a migration file to update database :
+To create, run and revert migrations, you nedd to install `humble-node-orm` globally via
 
-`npm run migration:create < nameOfYourMigration >` => a file will be created into ./migrations folder
+`npm install -g humble-node-orm`
 
-`npm run migration:run` => it will play the migration file
+You can handle a migration file to update database :
 
-`npm run migration:revert` => it will revert the last migration file
+`humble-migrate migration:create <nameOfYourMigration>` => a file will be created into ./migrations folder
+
+`humble-migrate migration:run` => it will play the migration file
+
+`humble-migrate migration:revert` => it will revert the last migration file
 
 ## API
 

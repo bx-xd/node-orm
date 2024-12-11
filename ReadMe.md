@@ -1,10 +1,10 @@
-# Node Base ORM
+# Humble Node ORM inspired by Rails' ActiveRecord
 
 ## Intention
 
 This is a humble beat of code inspired by Rails' ActiveRecord. My goal was to rebuild skeleton of ActiveRecord in plain Javascript ! I know, I know, there's a lot of it already...
 
-Setup
+## Setup
 
 To install depencies : `yarn install` or `npm install` or `pnpm install`
 
@@ -85,7 +85,7 @@ main();
 
 You can see an example in `example.js`
 
-### Migrations
+## Migrations
 
 To create, run and revert migrations, you nedd to install `humble-node-orm` globally via
 

@@ -1,17 +1,21 @@
 {
   "name": "humble-node-orm",
   "description": "A didactic orm",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "dependencies": {
+    "commander": "^12.1.0",
     "mysql2": "^3.11.5",
     "pg": "^8.13.1",
     "sqlite3": "^5.1.7"
   },
+  "bin": {
+    "humble-migrate": "./cli.js"
+  },
   "scripts": {
     "test": "jest",
-    "migration:create": "node ./scripts/migration/create.js",
-    "migration:run": "node ./scripts/migration/run.js",
-    "migration:revert": "node ./scripts/migration/revert.js"
+    "migration:create": "node cli.js migration:create",
+    "migration:run": "node cli.js migration:run",
+    "migration:revert": "node cli.js migration:revert"
   },
   "type": "module",
   "exports": "./index.js",

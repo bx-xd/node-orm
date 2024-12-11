@@ -28,16 +28,21 @@ In order to use this humble ORM, you need two things :
 ```javascript
 import { Model, ORM } from 'humble-node-orm';
 
-const orm = new ORM({
-  type: 'sqlite',
-  database: './database/test.db',
-});
 // Define User Model
 class User extends Model {
   constructor(data) {
-    super('users', data);
+    super(data);
+    this.addValidation('pseudo', this.validatePseudo);
+  }
+  validatePseudo(pseudo) {
+    return pseudo.length > 3;
   }
 }
+
+const orm = new ORM({
+  type: 'sqlite',
+  database: './databases/test.db'
+});
 
 // Use case
 async function main() {
@@ -62,7 +67,8 @@ async function main() {
 
     // Update an instance of User
     if (lastUser) {
-      const updatedUser = await lastUser.update({ pseudo: 'alice_updated' });
+	// This update will raise an validation error !
+      const updatedUser = await lastUser.update({ pseudo: 'new' });
       console.log('Updated User:', updatedUser);
       console.log(await User.findById(lastUser.id));
     }
@@ -80,6 +86,7 @@ async function main() {
 }
 
 main();
+
 
 ```
 

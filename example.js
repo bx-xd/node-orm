@@ -3,13 +3,17 @@ import { Model, ORM } from './index.js';
 // Define User Model
 class User extends Model {
   constructor(data) {
-    super('users', data);
+    super(data);
+    this.addValidation('pseudo', this.validatePseudo);
+  }
+  validatePseudo(pseudo) {
+    return pseudo.length > 3;
   }
 }
 
 const orm = new ORM({
   type: 'sqlite',
-  database: './databases/test.db',
+  database: './databases/test.db'
 });
 
 // Use case
@@ -35,7 +39,7 @@ async function main() {
 
     // Update an instance of User
     if (lastUser) {
-      const updatedUser = await lastUser.update({ pseudo: 'alice_updated' });
+      const updatedUser = await lastUser.update({ pseudo: 'new_alice' });
       console.log('Updated User:', updatedUser);
       console.log(await User.findById(lastUser.id));
     }

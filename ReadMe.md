@@ -6,38 +6,45 @@ This is a humble beat of code inspired by Rails' ActiveRecord. My goal was to re
 
 ## Setup
 
-To install depencies : `yarn install` or `npm install` or `pnpm install`
-
 In order to use this humble ORM, you need two things :
 
-- configuration :
+**1. Install package** : `npm install humble-node-orm`
 
-  1. Create a file at the root of your project named `node-orm.config.json`
-  2. Setup your configuration with specific parameters, for example :
 
-  ```json
-  {
-    "type": "sqlite",
-    "database": "./database/test.db"
-  }
-  ```
+**2. Write a configuration file** :
 
-  3. with this example, create a file into `database` folder named `test.db` à the root of your project
-- utilisation :
+Create a file at the root of your project named `node-orm.config.json`
+
+```json
+{
+  "type": "sqlite",
+  "database": "./database/test.db"
+}
+```
+
+with this example, create a file into `database` folder named `test.db` à the root of your project
+
+
+## Utilisation
 
 ```javascript
 import { Model, ORM } from 'humble-node-orm';
 
-const orm = new ORM({
-  type: 'sqlite',
-  database: './database/test.db',
-});
 // Define User Model
 class User extends Model {
   constructor(data) {
-    super('users', data);
+    super(data);
+    this.addValidation('pseudo', this.validatePseudo);
+  }
+  validatePseudo(pseudo) {
+    return pseudo.length > 3;
   }
 }
+
+const orm = new ORM({
+  type: 'sqlite',
+  database: './databases/test.db'
+});
 
 // Use case
 async function main() {
@@ -62,7 +69,8 @@ async function main() {
 
     // Update an instance of User
     if (lastUser) {
-      const updatedUser = await lastUser.update({ pseudo: 'alice_updated' });
+	// This update will raise an validation error !
+      const updatedUser = await lastUser.update({ pseudo: 'new' });
       console.log('Updated User:', updatedUser);
       console.log(await User.findById(lastUser.id));
     }
@@ -80,6 +88,7 @@ async function main() {
 }
 
 main();
+
 
 ```
 
@@ -113,3 +122,10 @@ You can handle a migration file to update database :
 
 * `instance.update(data)` : update an instance with new data.
 * `instance.delete()` : delete an entry from table.
+
+
+#### 3. Validations
+
+Model as abstract class of any model expose a method that add validation(s) for a specific field
+
+- `addValidation(column, callback_validation)` : this method must be declared into specific model that have a field must be validate. `field` is a string corresponding to a column of the model table and `callback_validation` is the function that will execute before insert or update a instance of model

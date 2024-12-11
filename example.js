@@ -1,11 +1,19 @@
 import { Model, ORM } from './index.js';
 
+class Post extends Model {
+  constructor(data) {
+    super(data);
+    this.belongsTo(User);
+  }
+}
 // Define User Model
 class User extends Model {
   constructor(data) {
     super(data);
+    this.hasMany(Post);
     this.addValidation('pseudo', this.validatePseudo);
   }
+
   validatePseudo(pseudo) {
     return pseudo.length > 3;
   }
@@ -37,18 +45,31 @@ async function main() {
     const foundUser = await User.findById(1);
     console.log('Found User:', foundUser);
 
+    // Get all posts of a user
+    const userPosts = await foundUser.posts;
+    console.log('User Posts:', userPosts);
+
+    // Get user of a post
+    const writer = await userPosts.at(0).user;
+    console.log('Post Writer:', writer);
+
     // Update an instance of User
     if (lastUser) {
       const updatedUser = await lastUser.update({ pseudo: 'new_alice' });
       console.log('Updated User:', updatedUser);
-      console.log(await User.findById(lastUser.id));
     }
 
     // Delete an instance of User
     await lastUser.delete();
     console.log('User deleted');
 
-    console.log('All Users:', await User.all());
+    // Create a new not persisted instance
+    const newUser2 = new User({ pseudo: 'Bobby', password: 'bob123' });
+    console.log('Not persisted New User:', newUser2);
+    const persistedUser2 = await newUser2.save();
+    console.log('Persisted User:', persistedUser2);
+
+    await newUser2.delete();
   } catch (err) {
     console.error(err);
   } finally {

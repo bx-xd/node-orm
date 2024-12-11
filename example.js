@@ -1,5 +1,4 @@
-import { Model } from './index.js';
-import orm from './lib/orm-config-loader.js'
+import { Model, ORM } from './index.js';
 
 // Define User Model
 class User extends Model {
@@ -8,10 +7,15 @@ class User extends Model {
   }
 }
 
+const orm = new ORM({
+  type: 'sqlite',
+  database: './databases/test.db',
+});
+
 // Use case
 async function main() {
   try {
-    await orm.connection.query(`CREATE TABLE users (id INTEGER PRIMARY KEY, pseudo TEXT, password TEXT)`);
+    await orm.connection.query(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, pseudo TEXT, password TEXT)`);
 
     // create a new user
     const newUser = await User.create({ pseudo: 'Alice', password: 'alice123' });

@@ -3,6 +3,7 @@ import { Model, ORM } from './index.js';
 class Post extends Model {
   constructor(data) {
     super(data);
+    this.belongsTo(User);
   }
 }
 // Define User Model
@@ -47,6 +48,10 @@ async function main() {
     // Get all posts of a user
     const userPosts = await foundUser.posts;
     console.log('User Posts:', userPosts);
+
+    // Get user of a post
+    const writer = await userPosts.at(0).user;
+    console.log('Post Writer:', writer);
 
     // Update an instance of User
     if (lastUser) {

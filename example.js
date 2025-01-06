@@ -57,6 +57,10 @@ async function main() {
     if (lastUser) {
       const updatedUser = await lastUser.update({ pseudo: 'new_alice' });
       console.log('Updated User:', updatedUser);
+
+      updatedUser.password = 'new_alice123';
+      const savedUser = await updatedUser.save();
+      console.log('Saved User:', savedUser);
     }
 
     // Delete an instance of User

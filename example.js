@@ -8,14 +8,12 @@ class Post extends Model {
 }
 // Define User Model
 class User extends Model {
+  static validations = {
+    pseudo: (value) => value.length > 3
+  }
   constructor(data) {
     super(data);
     this.hasMany(Post);
-    this.addValidation('pseudo', this.validatePseudo);
-  }
-
-  validatePseudo(pseudo) {
-    return pseudo.length > 3;
   }
 }
 

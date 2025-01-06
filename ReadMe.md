@@ -36,14 +36,12 @@ class Post extends Model {
 }
 // Define User Model
 class User extends Model {
+  static validations = {
+    pseudo: (value) => value.length > 3
+  }
   constructor(data) {
     super(data);
     this.hasMany(Post);
-    this.addValidation('pseudo', this.validatePseudo);
-  }
-
-  validatePseudo(pseudo) {
-    return pseudo.length > 3;
   }
 }
 
@@ -140,12 +138,13 @@ You can handle a migration file to update database :
 
 * `instance.update(data)` : update an instance with new data.
 * `instance.delete()` : delete an entry from table.
+* `instance.save()` : save an instance.
 
 #### 3. Validations
 
 Model as abstract class of any model expose a method that add validation(s) for a specific field
 
-- `addValidation(column, callback_validation)` : this method must be declared into specific model that have a field must be validate. `field` is a string corresponding to a column of the model table and `callback_validation` is the function that will execute before insert or update a instance of model
+- `Model.validations = { field: callback_validation }` : this method must be declared into specific model that have a field must be validate. `field` is a string corresponding to a column of the model table and `callback_validation` is the function that will execute before insert or update a instance of model
 
 #### 4. Relationship
 

@@ -95,7 +95,7 @@ async function main() {
     const persistedUser2 = await newUser2.save();
     console.log('Persisted User:', persistedUser2);
 
-    await newUser2.delete();
+    await persistedUser2.delete();
   } catch (err) {
     console.error(err);
   } finally {
@@ -151,5 +151,4 @@ Model as abstract class of any model expose a method that add validation(s) for 
 Model expose two methods to define relationship between models :
 
 - `hasMany(model, foreignKey = 'id')` : define a one-to-many relationship between two models
-
 - `belongsTo(model, primaryKey = 'id')` : define a one-to-one relationship between two models

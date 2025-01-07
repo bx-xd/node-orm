@@ -71,7 +71,7 @@ async function main() {
     const persistedUser2 = await newUser2.save();
     console.log('Persisted User:', persistedUser2);
 
-    await newUser2.delete();
+    await persistedUser2.delete();
   } catch (err) {
     console.error(err);
   } finally {
